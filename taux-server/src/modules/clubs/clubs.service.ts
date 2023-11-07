@@ -32,10 +32,10 @@ export class ClubsService {
 	};
 
 	async addSong(clubId: string): Promise<SongDto>{
-		return new Promise(this.sampleSong);
+		return this.sampleSong;
 	};
 
 	async getDjSet(clubId: string): Promise<PlaylistDto>{
-		return [this.sampleSong, this.sampleSong];
+		return this.samplePlaylist;
 	};
 }

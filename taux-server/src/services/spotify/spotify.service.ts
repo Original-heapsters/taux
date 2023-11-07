@@ -24,18 +24,38 @@ export class SpotifyService {
 		const data = await lastValueFrom(
 		  this.httpService.post(spotifyTokenUrl, tokenDetail, options).pipe(
 		  	catchError((error: AxiosError) => {
-	          console.log(error.response.data);
 	          throw 'An error happened!';
 	        }),
 		    map(resp => resp.data)
 		  )
 		);
-		console.log(data);
 		const token: string = data.access_token;
 		const expiration: Date = new Date();
 		expiration.setSeconds(expiration.getSeconds() + data.expires_in);
 		this.serviceToken = token;
 		this.tokenExpiration = expiration.getSeconds();
+  	}
+
+  	async getPlaylist(playlistId: string): Promise<{}> {
+  		const now: Date = new Date();
+  		if (!this.serviceToken || now.getSeconds() < this.tokenExpiration) {
+  			await this.refreshToken();
+  		}
+  		const playlistUrl: string = `https://api.spotify.com/v1/playlists/${playlistId}`;
+  		const options = {
+			headers: {
+				'Authorization': `Bearer ${this.serviceToken}`,
+			},
+		};
+		const data = await lastValueFrom(
+		  this.httpService.get(playlistUrl, options).pipe(
+		  	catchError((error: AxiosError) => {
+	          throw 'An error happened!';
+	        }),
+		    map(resp => resp.data)
+		  )
+		);
+		return data;
   	}
 
   	async getArtist(artistId: string): Promise<{}> {
@@ -52,13 +72,55 @@ export class SpotifyService {
 		const data = await lastValueFrom(
 		  this.httpService.get(artistUrl, options).pipe(
 		  	catchError((error: AxiosError) => {
-	          console.log(error.response.data);
 	          throw 'An error happened!';
 	        }),
 		    map(resp => resp.data)
 		  )
 		);
-		console.log(data);
+		return data;
+  	}
+
+  	async getTrack(trackId: string): Promise<{}> {
+  		const now: Date = new Date();
+  		if (!this.serviceToken || now.getSeconds() < this.tokenExpiration) {
+  			await this.refreshToken();
+  		}
+  		const trackUrl: string = `https://api.spotify.com/v1/tracks/${trackId}`;
+  		const options = {
+			headers: {
+				'Authorization': `Bearer ${this.serviceToken}`,
+			},
+		};
+		const data = await lastValueFrom(
+		  this.httpService.get(trackUrl, options).pipe(
+		  	catchError((error: AxiosError) => {
+	          throw 'An error happened!';
+	        }),
+		    map(resp => resp.data)
+		  )
+		);
+		return data;
+  	}
+
+  	async getTrackFeatures(trackId: string): Promise<{}> {
+  		const now: Date = new Date();
+  		if (!this.serviceToken || now.getSeconds() < this.tokenExpiration) {
+  			await this.refreshToken();
+  		}
+  		const featuresUrl: string = `https://api.spotify.com/v1/audio-features/${trackId}`;
+  		const options = {
+			headers: {
+				'Authorization': `Bearer ${this.serviceToken}`,
+			},
+		};
+		const data = await lastValueFrom(
+		  this.httpService.get(featuresUrl, options).pipe(
+		  	catchError((error: AxiosError) => {
+	          throw 'An error happened!';
+	        }),
+		    map(resp => resp.data)
+		  )
+		);
 		return data;
   	}
 }

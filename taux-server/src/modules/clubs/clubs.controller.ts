@@ -21,7 +21,7 @@ export class ClubsController {
 
 	@Post('/:id/songs/add')
 	async addSong(@Param('id') clubId: string) {
-		const addedSong: SongDto = this.clubsService.addSong(clubId);
+		const addedSong: SongDto = await this.clubsService.addSong(clubId);
 		return `Added ${addedSong} to club ${clubId}`;
 	}
 
