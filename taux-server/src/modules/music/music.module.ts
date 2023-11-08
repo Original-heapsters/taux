@@ -12,6 +12,6 @@ import { SpotifyService } from '../../services/spotify/spotify.service';
     HttpModule,
   ],
   controllers: [MusicController],
-  providers: [SpotifyService]
+  providers: [SpotifyService],
 })
 export class MusicModule {}

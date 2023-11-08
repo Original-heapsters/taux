@@ -5,8 +5,14 @@ services:
   db:
     image: postgres
     restart: always
+    ports:
+      - 5432:5432
+    volumes:
+      - ~/dockerVolumes/postgres:/var/lib/postgressql/data
     environment:
-      POSTGRES_PASSWORD: example
+      POSTGRES_PASSWORD: tauxPassword
+      POSTGRES_USER: tauxUser
+      POSTGRES_DB: taux
 
   adminer:
     image: adminer
