@@ -1,15 +1,23 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { AxiosError } from 'axios';
 import { catchError, map, lastValueFrom } from 'rxjs';
+import { ApiCredential, ApiCredentialProvider } from '../../models/entities/apiCredential.entity';
 
 @Injectable()
 export class SpotifyService {
   constructor(
+    @Inject(CACHE_MANAGER) private cacheService: Cache,
+    @InjectRepository(ApiCredential) private credentialRepository: Repository<ApiCredential>,
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {}
+  private tokenPrefix: string = 'credentials:spotify';
   private serviceToken: string;
   private tokenExpiration: number;
 
@@ -30,32 +38,34 @@ export class SpotifyService {
     const data = await lastValueFrom(
       this.httpService.post(spotifyTokenUrl, tokenDetail, options).pipe(
         catchError((error: AxiosError) => {
+          console.log(error);
           throw 'An error happened!';
         }),
         map((resp) => resp.data),
       ),
     );
-    const token: string = data.access_token;
-    const expiration: Date = new Date();
-    expiration.setSeconds(expiration.getSeconds() + data.expires_in);
-    this.serviceToken = token;
-    this.tokenExpiration = expiration.getSeconds();
+    console.log(data);
+    const ttl: number = data.expires_in;
+    await this.cacheService.set(this.tokenPrefix, data.access_token, 3600 )
   }
 
   async getPlaylist(playlistId: string): Promise<object> {
     const now: Date = new Date();
-    if (!this.serviceToken || now.getSeconds() < this.tokenExpiration) {
+    const existingToken: string = await this.cacheService.get(this.tokenPrefix)
+    console.log(existingToken);
+    if (!existingToken) {
       await this.refreshToken();
     }
     const playlistUrl: string = `https://api.spotify.com/v1/playlists/${playlistId}`;
     const options = {
       headers: {
-        Authorization: `Bearer ${this.serviceToken}`,
+        Authorization: `Bearer ${existingToken}`,
       },
     };
     const data = await lastValueFrom(
       this.httpService.get(playlistUrl, options).pipe(
         catchError((error: AxiosError) => {
+          console.log(error);
           throw 'An error happened!';
         }),
         map((resp) => resp.data),
