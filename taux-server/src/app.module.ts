@@ -3,7 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CacheModule } from '@nestjs/cache-manager'
-import * as redisStore from 'cache-manager-redis-store';
+import { redisStore } from 'cache-manager-redis-yet';  
+import { RedisClientOptions } from 'redis';  
 import { Song } from './models/entities/song.entity';
 import { Playlist } from './models/entities/playlist.entity';
 import { Club } from './models/entities/club.entity';
@@ -16,12 +17,12 @@ import { ClubsModule } from './modules/clubs/clubs.module';
     ConfigModule.forRoot({
       envFilePath: ['.env.development'],
     }),
-    CacheModule.registerAsync({
+    CacheModule.registerAsync<RedisClientOptions>({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        store: redisStore,
-        host: configService.get('CACHE_HOST'),
-        port: configService.get('CACHE_PORT'),
+      useFactory: async (configService: ConfigService) => ({
+        store: await redisStore({
+          url: configService.get('CACHE_URL'),
+        }),
       }),
       inject: [ConfigService],
       isGlobal: true,
