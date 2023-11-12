@@ -22,6 +22,6 @@ export class MusicController {
 
   @Get('/track/:id/features')
   async getTrackFeatures(@Param('id') trackId: string): Promise<object> {
-    return await this.spotifyService.getTrackFeatures(trackId);
+    return await this.spotifyService.getTrackFeatures([trackId]);
   }
 }

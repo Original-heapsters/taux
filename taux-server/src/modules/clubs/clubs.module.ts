@@ -5,6 +5,7 @@ import { HttpModule } from '@nestjs/axios';
 import { Song } from '../../models/entities/song.entity';
 import { Playlist } from '../../models/entities/playlist.entity';
 import { Club } from '../../models/entities/club.entity';
+import { AudioFeature } from '../../models/entities/audioFeature.entity';
 import { ApiCredential } from '../../models/entities/apiCredential.entity';
 import { ClubsController } from './clubs.controller';
 import { ClubsService } from './clubs.service';
@@ -15,7 +16,7 @@ import { SpotifyService } from '../../services/spotify/spotify.service';
     ConfigModule.forRoot({
       envFilePath: ['.env.development'],
     }),
-    TypeOrmModule.forFeature([ Song, Playlist, Club, ApiCredential ]),
+    TypeOrmModule.forFeature([ Song, Playlist, Club, ApiCredential, AudioFeature ]),
     HttpModule,
   ],
   controllers: [ClubsController],

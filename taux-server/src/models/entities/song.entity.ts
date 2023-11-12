@@ -1,6 +1,7 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToOne, JoinColumn } from 'typeorm';
 import { Club } from './club.entity';
 import { Playlist } from './playlist.entity';
+import { AudioFeature } from './audioFeature.entity';
 
 @Entity()
 export class Song {
@@ -21,5 +22,8 @@ export class Song {
 
   @ManyToOne(() => Playlist, (playlist) => playlist.songs, { nullable: true })
   playlist?: Playlist
-  
+
+  @OneToOne(() => AudioFeature, (audioFeature) => audioFeature.song)
+  @JoinColumn()
+  audioFeature?: AudioFeature
 }

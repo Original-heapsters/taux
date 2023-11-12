@@ -2,6 +2,7 @@ import { Controller, Get, Post, Param, Body } from '@nestjs/common';
 import { ClubsService } from './clubs.service';
 import { Club } from '../../models/entities/club.entity';
 import { Song } from '../../models/entities/song.entity';
+import { AudioFeature } from '../../models/entities/audioFeature.entity';
 import { Playlist } from '../../models/entities/playlist.entity';
 import { AddPlaylistsDto } from '../../models/dtos/add-playlists.dto';
 
@@ -28,7 +29,7 @@ export class ClubsController {
 
   @Post('/:id/playlists/add')
   async addPlaylists(@Param('id') clubId: string, @Body() addPlaylistsDto: AddPlaylistsDto) {
-    const addedPlaylists: Playlist[] = await this.clubsService.addPlaylists(clubId, addPlaylistsDto);
+    const addedPlaylists: AudioFeature[] = await this.clubsService.addPlaylists(clubId, addPlaylistsDto);
     return addedPlaylists;
   }
 

@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Song } from '../../models/entities/song.entity';
 import { Club } from '../../models/entities/club.entity';
+import { AudioFeature } from '../../models/entities/audioFeature.entity';
 import { Playlist } from '../../models/entities/playlist.entity';
 import { AddPlaylistsDto } from '../../models/dtos/add-playlists.dto';
 import { SpotifyService } from '../../services/spotify/spotify.service';
@@ -13,6 +14,7 @@ export class ClubsService {
     @InjectRepository(Song) private songRepository: Repository<Song>,
     @InjectRepository(Playlist) private playlistRepository: Repository<Playlist>,
     @InjectRepository(Club) private clubRepository: Repository<Club>,
+    @InjectRepository(AudioFeature) private audioFeatureRepository: Repository<AudioFeature>,
     private readonly spotifyService: SpotifyService
     ) {}
 
@@ -47,8 +49,29 @@ export class ClubsService {
     return testSong;
   }
 
-  async addPlaylists(clubId: string, addPlaylistsDto: AddPlaylistsDto): Promise<Playlist[]> {
+  async getFeaturesForSongs(songIds: string[]): Promise<AudioFeature[]> {
+
+    const songFeatureArray: AudioFeature[] = [];
+
+    
+     const audioFeatureResponse: any = await this.spotifyService.getTrackFeatures(songIds);
+     const audioFeatures : AudioFeature[] = audioFeatureResponse.audio_features;
+     console.log(audioFeatures);
+
+     for( const feature of audioFeatures) {
+      console.log(feature);
+      const newFeature = this.audioFeatureRepository.create(feature);
+      await this.audioFeatureRepository.save(newFeature)
+     }
+    
+
+    return audioFeatures;
+
+  }
+
+  async addPlaylists(clubId: string, addPlaylistsDto: AddPlaylistsDto): Promise<AudioFeature[]> {
     const songList: Song[] = [];
+    const songIdList: string[] = [];
 
     for (const id of addPlaylistsDto.playlistIds) {
       const tracks = await this.spotifyService.getTracksFromPlaylist(id);
@@ -60,14 +83,17 @@ export class ClubsService {
         }
         const songObject: Song = this.songRepository.create(tmpTrack);
         songList.push(songObject);
+        songIdList.push(songObject.trackId);
       }
     }
+
+    const allFeatures: AudioFeature[] = await this.getFeaturesForSongs(songIdList);
 
     const tmpPlaylist: Partial<Playlist> = {
       songs: songList,
     };
     const djSet: Playlist = this.playlistRepository.create(tmpPlaylist);
-    return [djSet];
+    return allFeatures;
   }
 
   async getDjSet(clubId: string): Promise<Playlist> {

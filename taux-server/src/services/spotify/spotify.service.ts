@@ -8,6 +8,7 @@ import { HttpService } from '@nestjs/axios';
 import { AxiosError } from 'axios';
 import { catchError, map, lastValueFrom } from 'rxjs';
 import { Song } from '../../models/entities/song.entity';
+import { AudioFeature } from '../../models/entities/audioFeature.entity';
 import { ApiCredential, ApiCredentialProvider } from '../../models/entities/apiCredential.entity';
 
 @Injectable()
@@ -140,18 +141,20 @@ export class SpotifyService {
     return data.tracks.items;
   }
 
-  async getTrackFeatures(trackId: string): Promise<object> {
+  async getTrackFeatures(trackIds: string[]): Promise<AudioFeature[]> {
     let authToken: string = await this.cacheService.get(this.tokenPrefix)
     if (!authToken) {
       authToken = await this.refreshToken();
     }
-    const featuresUrl: string = `https://api.spotify.com/v1/audio-features/${trackId}`;
+
+    const trackIdsQuery = trackIds.join()
+    const featuresUrl: string = `https://api.spotify.com/v1/audio-features?ids=${trackIdsQuery}`;
     const options = {
       headers: {
         Authorization: `Bearer ${authToken}`,
       },
     };
-    const data = await lastValueFrom(
+    const data: AudioFeature[] = await lastValueFrom(
       this.httpService.get(featuresUrl, options).pipe(
         catchError((error: AxiosError) => {
           throw 'An error happened!';
