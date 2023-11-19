@@ -5,6 +5,7 @@ export enum ApiCredentialProvider {
 };
 
 @Entity()
+@Unique('unq_provider', ['email', 'type'])
 export class ApiCredential {
   @PrimaryGeneratedColumn('uuid')
   id: string;

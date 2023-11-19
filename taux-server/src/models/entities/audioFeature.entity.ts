@@ -7,7 +7,7 @@ export class AudioFeature {
   featureId: string;
 
   @Column({ type: 'varchar', length: 300 })
-  id: string;
+  trackId: string;
 
   @Column({ type: 'varchar', length: 300 })
   analysisUrl: string;

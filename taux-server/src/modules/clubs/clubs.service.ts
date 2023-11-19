@@ -49,23 +49,30 @@ export class ClubsService {
     return testSong;
   }
 
-  async getFeaturesForSongs(songIds: string[]): Promise<AudioFeature[]> {
+  async getFeaturesForSongs(songs: Song[]): Promise<AudioFeature[]> {
 
     const songFeatureArray: AudioFeature[] = [];
+    const songIds = songs.map((song) => song.trackId);
 
-    
      const audioFeatureResponse: any = await this.spotifyService.getTrackFeatures(songIds);
-     const audioFeatures : AudioFeature[] = audioFeatureResponse.audio_features;
-     console.log(audioFeatures);
+     const audioFeatures : any[] = audioFeatureResponse.audio_features;
+     const dbFeatures: AudioFeature[] = [];
 
      for( const feature of audioFeatures) {
       console.log(feature);
-      const newFeature = this.audioFeatureRepository.create(feature);
+      const partialFeature: Partial<AudioFeature> = {
+        trackId: feature.id,
+        analysisUrl: feature.analysis_url,
+        tempo: feature.tempo,
+        song: songs.find((song) => song.trackId === feature.id),
+      };
+      const newFeature = this.audioFeatureRepository.create(partialFeature);
       await this.audioFeatureRepository.save(newFeature)
+      dbFeatures.push(newFeature);
      }
     
 
-    return audioFeatures;
+    return dbFeatures;
 
   }
 
@@ -82,12 +89,13 @@ export class ClubsService {
           trackId: track.track.id,
         }
         const songObject: Song = this.songRepository.create(tmpTrack);
+        await this.songRepository.save(songObject);
         songList.push(songObject);
         songIdList.push(songObject.trackId);
       }
     }
 
-    const allFeatures: AudioFeature[] = await this.getFeaturesForSongs(songIdList);
+    const allFeatures: AudioFeature[] = await this.getFeaturesForSongs(songList);
 
     const tmpPlaylist: Partial<Playlist> = {
       songs: songList,
@@ -101,6 +109,7 @@ export class ClubsService {
     const tmpPlaylist: Partial<Playlist> = {
       songs: [testSong],
     };
+    
     const djSet: Playlist = this.playlistRepository.create(tmpPlaylist);
     return djSet;
   }
