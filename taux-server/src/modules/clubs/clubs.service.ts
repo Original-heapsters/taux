@@ -6,6 +6,7 @@ import { Club } from '../../models/entities/club.entity';
 import { AudioFeature } from '../../models/entities/audioFeature.entity';
 import { Playlist } from '../../models/entities/playlist.entity';
 import { AddPlaylistsDto } from '../../models/dtos/add-playlists.dto';
+import { CreateClubDto } from '../../models/dtos/create-club.dto';
 import { SpotifyService } from '../../services/spotify/spotify.service';
 
 @Injectable()
@@ -39,8 +40,20 @@ export class ClubsService {
     return this.clubRepository.find();
   }
 
-  async create(): Promise<Club> {
-    const createdClub: Club = this.clubRepository.create(this.sampleClub);
+  async getByName(name: string): Promise<Club> {
+    return this.clubRepository.findOneBy({ name: name });
+  }
+
+  async getById(id: string): Promise<Club> {
+    return this.clubRepository.findOneById(id);
+  }
+
+  async create(createClubDto: CreateClubDto): Promise<Club> {
+    const newClub: Partial<Club> = {
+      name: createClubDto.name,
+    };
+
+    const createdClub: Club = this.clubRepository.create(newClub);
     return this.clubRepository.save(createdClub);
   }
 
@@ -79,6 +92,7 @@ export class ClubsService {
   async addPlaylists(clubId: string, addPlaylistsDto: AddPlaylistsDto): Promise<AudioFeature[]> {
     const songList: Song[] = [];
     const songIdList: string[] = [];
+    const club = await this.clubRepository.findOneById(clubId);
 
     for (const id of addPlaylistsDto.playlistIds) {
       const tracks = await this.spotifyService.getTracksFromPlaylist(id);
@@ -87,6 +101,7 @@ export class ClubsService {
           name: track.track.name,
           uri: track.track.uri,
           trackId: track.track.id,
+          club
         }
         const songObject: Song = this.songRepository.create(tmpTrack);
         await this.songRepository.save(songObject);
@@ -105,9 +120,20 @@ export class ClubsService {
   }
 
   async getDjSet(clubId: string): Promise<Playlist> {
-    const testSong: Song = this.songRepository.create(this.sampleSong);
+    const club = await this.clubRepository.findOneById(clubId);
+    const songs = await this.songRepository.find({
+      where: {
+        club: {
+          id: clubId,
+        },
+      },
+        relations: {
+            club: true,
+        },
+    });
+
     const tmpPlaylist: Partial<Playlist> = {
-      songs: [testSong],
+      songs: songs,
     };
     
     const djSet: Playlist = this.playlistRepository.create(tmpPlaylist);

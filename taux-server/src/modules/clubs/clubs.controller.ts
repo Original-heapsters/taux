@@ -5,6 +5,7 @@ import { Song } from '../../models/entities/song.entity';
 import { AudioFeature } from '../../models/entities/audioFeature.entity';
 import { Playlist } from '../../models/entities/playlist.entity';
 import { AddPlaylistsDto } from '../../models/dtos/add-playlists.dto';
+import { CreateClubDto } from '../../models/dtos/create-club.dto';
 
 @Controller('clubs')
 export class ClubsController {
@@ -15,9 +16,20 @@ export class ClubsController {
     return await this.clubsService.getAll();
   }
 
+  @Get('/name/:name')
+  async getByName(@Param('name') name: string) {
+    return await this.clubsService.getByName(name);
+  }
+
+  @Get('/:id')
+  async getById(@Param('id') clubId: string) {
+    return await this.clubsService.getById(clubId);
+  }
+
   @Post('/new')
-  async createClub() {
-    const newClub: Club = await this.clubsService.create();
+  async createClub(@Body() createClubDto: CreateClubDto) {
+
+    const newClub: Club = await this.clubsService.create(createClubDto);
     return newClub;
   }
 
